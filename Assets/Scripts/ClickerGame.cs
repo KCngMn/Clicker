@@ -1,24 +1,22 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
+using System.Numerics;
 
 public class ClickerGame : MonoBehaviour
 {
-    [Header("UI Elements")]
     public Button clickButton;
     public Text scoreText;
     public Button upgradeButton;
     public Text upgradeCostText;
 
-    private int score = 0;
-    private int clickPower = 1;
+    private BigInteger score = 0;
+    private BigInteger clickPower = 1;
 
-    [Header("Upgrade Settings")]
-    public int initialUpgradeCost = 10;
-    public int upgradeCostIncrement = 5;
-    private int currentUpgradeCost;
+    public BigInteger initialUpgradeCost = 10;
+    public BigInteger upgradeCostIncrement = 5;
+    private BigInteger currentUpgradeCost;
 
-    [Header("Auto Click Settings")]
     public float autoClickInterval = 1.0f;
 
     private Animator clickButtonAnimator;
@@ -26,10 +24,10 @@ public class ClickerGame : MonoBehaviour
     void Start()
     {
         currentUpgradeCost = initialUpgradeCost;
-       
+
         clickButton.onClick.AddListener(OnButtonClick);
         upgradeButton.onClick.AddListener(OnUpgradeButtonClick);
-    
+
         clickButtonAnimator = clickButton.GetComponent<Animator>();
 
         UpdateScoreText();
@@ -56,18 +54,17 @@ public class ClickerGame : MonoBehaviour
     {
         score += clickPower;
         UpdateScoreText();
-        Debug.Log("Score incremented. Current score: " + score);
     }
 
     void OnUpgradeButtonClick()
     {
-        if (CanAffordUpgrade())
+        if (CanUpgrade())
         {
             PurchaseUpgrade();
         }
     }
 
-    bool CanAffordUpgrade()
+    bool CanUpgrade()
     {
         return score >= currentUpgradeCost;
     }
@@ -80,18 +77,16 @@ public class ClickerGame : MonoBehaviour
 
         UpdateScoreText();
         UpdateUpgradeCostText();
-
-      
     }
 
     void UpdateScoreText()
     {
-        scoreText.text = $"{score} Gold";
+        scoreText.text = FormatBigNumber(score) + " Gold";
     }
 
     void UpdateUpgradeCostText()
     {
-        upgradeCostText.text = $"비용: {currentUpgradeCost} Gold";
+        upgradeCostText.text = "비용: " + FormatBigNumber(currentUpgradeCost) + " Gold";
     }
 
     IEnumerator AutoClick()
@@ -101,5 +96,25 @@ public class ClickerGame : MonoBehaviour
             yield return new WaitForSeconds(autoClickInterval);
             IncrementScore();
         }
+    }
+
+    string FormatBigNumber(BigInteger number)
+    {
+        if (number < 1000)
+        {
+            return number.ToString();
+        }
+
+        string[] units = { "", "K", "M", "B", "T", "Q", "Qi", "Sx", "Sp", "Oc", "No", "Dc" };
+        int unitIndex = 0;
+        decimal decimalNumber = (decimal)number;
+
+        while (decimalNumber >= 1000)
+        {
+            decimalNumber /= 1000;
+            unitIndex++;
+        }
+
+        return decimalNumber.ToString("F2") + units[unitIndex];
     }
 }
